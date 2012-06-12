@@ -3,7 +3,6 @@ from datetime import datetime
 from django import forms
 from django.db import models
 from django.core.cache import cache
-from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import slugify
@@ -187,7 +186,7 @@ class InstantMessengerForm(forms.ModelForm):
 class WebsiteProfile(models.Model):
     user = models.ForeignKey(User, db_index=True, related_name='website_profiles')
     name = models.CharField(max_length=64)
-    url = models.URLField(verify_exists=True)
+    url = models.URLField()
 
     def __unicode__(self):
         return self.url
