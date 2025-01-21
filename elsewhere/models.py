@@ -129,17 +129,17 @@ class Profile(models.Model):
         # Profile display name
         return self.data_item['name']
     name = property(_get_name)
- 
+
     def _get_url(self):
         # Profile URL with username
         return self.data_item['url'] % self.username
     url = property(_get_url)
-    
+
     def _get_icon_name(self):
         # Icon name
         return self.data_item['icon']
     icon_name = property(_get_icon_name)
- 
+
     def _get_icon(self):
         # Icon URL or link to Google icon service
         if self.icon_name:
@@ -152,10 +152,12 @@ class Profile(models.Model):
 class SocialNetworkProfile(Profile):
     data_manager = sn_manager
 
-    user = models.ForeignKey(User, db_index=True, related_name='social_network_profiles')
+    user = models.ForeignKey(User, db_index=True,
+                             related_name='social_network_profiles',
+                             on_delete=models.CASCADE)
     network_id = models.CharField(max_length=16, choices=data_manager.choices, db_index=True)
     username = models.CharField(max_length=64)
-    
+
     def __unicode__(self):
         return self.network_id
 
@@ -169,7 +171,9 @@ class SocialNetworkForm(forms.ModelForm):
 class InstantMessengerProfile(Profile):
     data_manager = im_manager
 
-    user = models.ForeignKey(User, db_index=True, related_name='instant_messenger_profiles')
+    user = models.ForeignKey(User, db_index=True,
+                             related_name='instant_messenger_profiles',
+                             on_delete=models.CASCADE)
     network_id = models.CharField(max_length=16, choices=data_manager.choices, db_index=True)
     username = models.CharField(max_length=64)
 
@@ -184,7 +188,9 @@ class InstantMessengerForm(forms.ModelForm):
 
 
 class WebsiteProfile(models.Model):
-    user = models.ForeignKey(User, db_index=True, related_name='website_profiles')
+    user = models.ForeignKey(User, db_index=True,
+                             related_name='website_profiles',
+                             on_delete=models.CASCADE)
     name = models.CharField(max_length=64)
     url = models.URLField()
 

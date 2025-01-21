@@ -1,4 +1,4 @@
-_Friendly fork to update to Django 1.4._
+_Friendly fork to update to Django 1.9._
 
 ***
 

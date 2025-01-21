@@ -1,10 +1,13 @@
-from django.db.models import signals
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
 from elsewhere.default_list import *
 from elsewhere.models import SocialNetwork, InstantMessenger
 
 # this function will fill the database with default data (stored in default_lists.py)
 
+
+@receiver(post_migrate)
 def fill_db(sender=None, **kwargs):
     for item in default_social_networks: # fill social networks
         if item.has_key('identifier'):
@@ -29,5 +32,3 @@ def fill_db(sender=None, **kwargs):
             'identifier': ident,
             'icon': item['icon']
         })
-
-signals.post_syncdb.connect(fill_db)
