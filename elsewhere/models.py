@@ -43,24 +43,25 @@ class InstantMessenger(Network):
         cache.delete(IM_CACHE_KEY)
         super(InstantMessenger, self).save(*args, **kwargs)
 
-# the following makes the social / IM networks data act as lists.
+# The following makes the social / IM networks data act as dicts.
 
-def SocialNetworkData():
+def get_social_network_data():
     cache_key = SN_CACHE_KEY
     data = cache.get(cache_key)
 
     if not data:
-        data = []
+        data = {}
 
         try:
-            for network in SocialNetwork.objects.all():
-                data.append({
-                    'id': slugify(network.name),
+            for network in SocialNetwork.objects.iterator():
+                id = slugify(network.name)
+                data[id] = {
+                    'id': id,
                     'name': network.name,
                     'url': network.url,
                     'identifier': network.identifier,
                     'icon': network.icon
-                })
+                }
             cache.set(cache_key, data, 60*60*24)
         except:
             # if we haven't yet synced the database, don't worry about this yet
@@ -68,20 +69,21 @@ def SocialNetworkData():
 
     return data
 
-def InstantMessengerData():
+def get_instant_messanger_data():
     cache_key = IM_CACHE_KEY
     data = cache.get(cache_key)
 
     if not data:
-        data = []
+        data = {}
         try:
-            for network in InstantMessenger.objects.all():
-                data.append({
-                    'id': slugify(network.name),
+            for network in InstantMessenger.objects.iterator():
+                id = slugify(network.name)
+                data[id] = {
+                    'id': id,
                     'name': network.name,
                     'url': network.url,
                     'icon': network.icon
-                })
+                }
             cache.set(cache_key, data, 60*60*24)
         except:
             # if we haven't yet synced the database, don't worry about this yet
@@ -90,20 +92,30 @@ def InstantMessengerData():
     return data
 
 class ProfileManager:
-    """ Handle raw data for lists of profiles."""
+    """ Handle raw data for dicts of profiles."""
     data = {}
 
     def _get_choices(self):
         """ List of choices for profile select fields. """
-        return [(props['id'], props['name']) for props in self.data]
+        return [(props['id'], props['name']) for props in self.data.values()]
     choices = property(_get_choices)
 
 class SocialNetworkManager(ProfileManager):
-    data = SocialNetworkData()
+    _data = {}
+    def _get_data(self):
+        if not self._data:
+            self._data = get_social_network_data()
+        return self._data
+    data = property(_get_data)
 sn_manager = SocialNetworkManager()
 
 class InstantMessengerManager(ProfileManager):
-    data = InstantMessengerData()
+    _data = {}
+    def _get_data(self):
+        if not self._data:
+            self._data = get_instant_messanger_data()
+        return self._data
+    data = property(_get_data)
 im_manager = InstantMessengerManager()
 
 class Profile(models.Model):
@@ -119,10 +131,7 @@ class Profile(models.Model):
 
     def _get_data_item(self):
         # Find profile data for this profile id
-        for network in self.data_manager.data:
-            if network['id'] == self.network_id:
-                return network
-        return None
+        return self.data_manager.data[self.network_id]
     data_item = property(_get_data_item)
 
     def _get_name(self):
@@ -143,8 +152,6 @@ class Profile(models.Model):
     def _get_icon(self):
         # Icon URL or link to Google icon service
         if self.icon_name:
-            print reverse('elsewhere_img', args=[self.icon_name])
-            print self.icon_name
             return reverse('elsewhere_img', args=[self.icon_name])
         return GOOGLE_PROFILE_URL % self.url
     icon = property(_get_icon)
